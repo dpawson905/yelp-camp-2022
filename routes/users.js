@@ -11,6 +11,9 @@ router
   .get(users.renderRegister)
   .post(catchAsync(users.register));
 
+// verify route
+router.get("/verify/token", catchAsync(users.verifyFromEmail));
+
 router
   .route("/login")
   .get(users.renderLogin)
