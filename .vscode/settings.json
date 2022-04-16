@@ -1,5 +1,5 @@
 {
-  "editor.fontSize": 20,
-  "debug.console.fontSize": 20,
-  "terminal.integrated.fontSize": 20
+  "editor.fontSize": 12,
+  "debug.console.fontSize": 12,
+  "terminal.integrated.fontSize": 12
 }
