@@ -37,7 +37,6 @@ module.exports.register = async (req, res, next) => {
     res.redirect("register");
   }
 };
-
 // Email verification goes here
 module.exports.verifyFromEmail = async (req, res, next) => {
   try {
