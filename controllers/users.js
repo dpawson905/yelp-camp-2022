@@ -58,6 +58,28 @@ module.exports.verifyFromEmail = async (req, res, next) => {
   });
 };
 
+// Request New Token
+module.exports.newVerificationToken = async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    req.flash("error", "This account does not exist");
+    return res.redirect("/register");
+  }
+  if (user && user.isVerified) {
+    req.flash("error", "You have already verified your account. Please log in.");
+    return res.redirect("/login");
+  }
+  const userToken = new Token({
+    _userId: user._id,
+    token: crypto.randomBytes(16).toString("hex")
+  });
+  await userToken.save();
+  const url = helpers.setUrl(req, "verify", `token?token=${userToken.token}`);
+  await new Email(user, url).sendWelcome("Yelpcamp - New Token");
+  req.flash("success", "Please check your email to verify your account. Link expires in 10 minutes");
+  return res.redirect("/campgrounds");
+}
+
 module.exports.renderLogin = (req, res) => {
   res.render("users/login");
 };

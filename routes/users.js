@@ -14,6 +14,9 @@ router
 // verify route
 router.get("/verify/token", catchAsync(users.verifyFromEmail));
 
+// resend token route
+router.post("/resend-token", catchAsync(users.newVerificationToken))
+
 router
   .route("/login")
   .get(users.renderLogin)
