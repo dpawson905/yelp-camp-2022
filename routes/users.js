@@ -4,7 +4,10 @@ const passport = require("passport");
 const catchAsync = require("../utils/catchAsync");
 const User = require("../models/user");
 const users = require("../controllers/users");
-const helpers = require("../utils/helpers");
+
+const {
+  checkIfNotVerified
+} = require("../middleware");
 
 router
   .route("/register")
@@ -28,7 +31,7 @@ router
   .route("/login")
   .get(users.renderLogin)
   .post(
-    catchAsync(helpers.checkIfNotVerified),
+    catchAsync(checkIfNotVerified),
     passport.authenticate("local", {
       failureFlash: true,
       failureRedirect: "/login",
