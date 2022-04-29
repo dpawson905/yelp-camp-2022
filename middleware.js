@@ -2,6 +2,7 @@ const { campgroundSchema, reviewSchema } = require('./schemas.js');
 const ExpressError = require('./utils/ExpressError');
 const Campground = require('./models/campground');
 const Review = require('./models/review');
+const User = require("./models/user");
 
 module.exports.isLoggedIn = (req, res, next) => {
     if (!req.isAuthenticated()) {
@@ -52,3 +53,13 @@ module.exports.validateReview = (req, res, next) => {
         next();
     }
 }
+
+module.exports.checkIfNotVerified = async (req, res, next) => {
+    let user = await User.findOne({ username: req.body.username });
+      if (!user) return next();
+      if (user && !user.isVerified) {
+        req.flash("error", `Your account is not active. Check your email to verify your account`);
+        return res.redirect("/campgrounds");
+      }
+      return next();
+  }
