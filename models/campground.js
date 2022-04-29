@@ -54,14 +54,25 @@ CampgroundSchema.virtual("properties.popUpMarkup").get(function () {
     <p>${this.description.substring(0, 20)}...</p>`;
 });
 
-CampgroundSchema.post("findOneAndDelete", async function (doc) {
-  if (doc) {
-    await Review.deleteMany({
-      _id: {
-        $in: doc.reviews,
-      },
+CampgroundSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: "reviews",
+        populate: {
+            path: "author"
+        }
     });
-  }
-});
+    this.populate("author");
+    next();
+})
+
+CampgroundSchema.post('findOneAndDelete', async function (doc) {
+    if (doc) {
+        await Review.deleteMany({
+            _id: {
+                $in: doc.reviews
+            }
+        })
+    }
+})
 CampgroundSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model("Campground", CampgroundSchema);

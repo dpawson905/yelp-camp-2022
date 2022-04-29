@@ -4,5 +4,3 @@ const User = require('../models/user')
 exports.setUrl = (request, route, params) => {
   return `${request.protocol}://${request.headers.host}/${route}/${params}`;
 };
-
-
