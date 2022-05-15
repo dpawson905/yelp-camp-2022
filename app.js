@@ -21,6 +21,14 @@ const reviewRoutes = require('./routes/reviews');
 
 const MongoDBStore = require("connect-mongo");
 
+const {
+    scriptSrcUrls,
+    styleSrcUrls,
+    connectSrcUrls,
+    fontSrcUrls,
+    imgSrcUrls
+} = require('./utils/corsHelper');
+
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
 
 mongoose.connect(dbUrl, {
@@ -79,34 +87,14 @@ app.use(helmet({
 }));
 
 
-const scriptSrcUrls = [
-    "https://api.tiles.mapbox.com",
-    "https://api.mapbox.com",
-    "https://kit.fontawesome.com",
-    "https://cdnjs.cloudflare.com",
-    "https://cdn.jsdelivr.net",
-];
-const styleSrcUrls = [
-    "https://kit-free.fontawesome.com",
-    "https://cdn.jsdelivr.net",
-    "https://api.mapbox.com",
-    "https://api.tiles.mapbox.com",
-    "https://fonts.googleapis.com",
-    "https://use.fontawesome.com",
-];
-const connectSrcUrls = [
-    "https://api.mapbox.com",
-    "https://*.tiles.mapbox.com",
-    "https://events.mapbox.com",
-];
-const fontSrcUrls = [];
+
 app.use(
     helmet.contentSecurityPolicy({
         directives: {
             defaultSrc: [],
-            connectSrc: ["'self'", ...connectSrcUrls],
-            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
-            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+            connectSrc: ["'self'", ...connectSrcUrls()],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls()],
+            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls()],
             workerSrc: ["'self'", "blob:"],
             childSrc: ["blob:"],
             objectSrc: [],
@@ -114,10 +102,9 @@ app.use(
                 "'self'",
                 "blob:",
                 "data:",
-                "https://res.cloudinary.com/campcloud/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
-                "https://images.unsplash.com",
+                ...imgSrcUrls()
             ],
-            fontSrc: ["'self'", ...fontSrcUrls],
+            fontSrc: ["'self'", ...fontSrcUrls()],
         },
     })
 );
