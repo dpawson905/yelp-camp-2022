@@ -10,14 +10,13 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
-const passport = require("passport");
-const LocalStrategy = require("passport-local");
-const User = require("./models/user");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
+const oAuthRoutes = require('./routes/oAuth');
+const _passport = require('./utils/passport');
 
 const MongoDBStore = require("connect-mongo");
 
@@ -106,12 +105,7 @@ app.use(
   })
 );
 
-app.use(passport.initialize());
-app.use(passport.session());
-passport.use(new LocalStrategy(User.authenticate()));
-
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+_passport.passportInit(app);
 
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
@@ -121,6 +115,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/", userRoutes);
+app.use("/auth", oAuthRoutes);
 app.use("/campgrounds", campgroundRoutes);
 app.use("/campgrounds/:id/reviews", reviewRoutes);
 
