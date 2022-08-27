@@ -2,9 +2,10 @@ const crypto = require("crypto");
 const Email = require("../utils/emailHelper");
 const helpers = require("../utils/helpers");
 
+var kickbox = require("kickbox").client(process.env.KICKBOX_API_KEY).kickbox();
+
 const Token = require("../models/token");
 const User = require("../models/user");
-const token = require("../models/token");
 
 module.exports.renderRegister = (req, res) => {
   res.render("users/register");
@@ -12,29 +13,51 @@ module.exports.renderRegister = (req, res) => {
 
 module.exports.register = async (req, res, next) => {
   try {
-    const { email, username, password } = req.body;
-    const user = new User({
-      email,
-      username,
-      isVerified: false,
-      expires: Date.now(),
+    await kickbox.verify(req.body.email, async function (err, response) {
+      const { result, reason } = response.body;
+      if (result === "deliverable" && reason === "accepted_email") {
+        const { email, username, password } = req.body;
+        const user = new User({
+          email,
+          username,
+          isVerified: true,
+          expires: undefined,
+        });
+        await User.register(user, password);
+        req.flash(
+          "success",
+          "Thanks for registering, please login with your email and password."
+        );
+        return res.redirect("/login");
+      }
+      const { email, username, password } = req.body;
+      const user = new User({
+        email,
+        username,
+        isVerified: false,
+        expires: Date.now(),
+      });
+      const registeredUser = await User.register(user, password);
+      const userToken = new Token({
+        _userId: registeredUser._id,
+        token: crypto.randomBytes(16).toString("hex"),
+      });
+      await userToken.save();
+      const url = helpers.setUrl(
+        req,
+        "verify",
+        `token?token=${userToken.token}`
+      );
+      await new Email(user, url).sendWelcome("YelpCamp");
+      req.flash(
+        "success",
+        "Thanks for registering, Please check your email to verify your account. Link expires in 10 minutes"
+      );
+      return res.redirect("/campgrounds");
     });
-    const registeredUser = await User.register(user, password);
-    const userToken = new Token({
-      _userId: registeredUser._id,
-      token: crypto.randomBytes(16).toString("hex"),
-    });
-    await userToken.save();
-    const url = helpers.setUrl(req, "verify", `token?token=${userToken.token}`);
-    await new Email(user, url).sendWelcome("YelpCamp");
-    req.flash(
-      "success",
-      "Thanks for registering, Please check your email to verify your account. Link expires in 10 minutes"
-    );
-    return res.redirect("/campgrounds");
   } catch (e) {
     req.flash("error", e.message);
-    res.redirect("register");
+    res.redirect("/register");
   }
 };
 // Email verification goes here
@@ -145,7 +168,10 @@ module.exports.changePassword = async (req, res, next) => {
   try {
     let { password, password2 } = req.body;
     if (password !== password2) {
-      req.flash("error", "Passwords do not match. Click the link in your email to try again");
+      req.flash(
+        "error",
+        "Passwords do not match. Click the link in your email to try again"
+      );
       return res.redirect("/login");
     }
     const token = await Token.findOne({ token: req.body.token });
