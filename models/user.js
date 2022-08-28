@@ -19,7 +19,13 @@ const UserSchema = new Schema({
   },
   googleId: String,
   google_token: String,
-  username: String
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true
+  }
 });
 
 UserSchema.plugin(passportLocalMongoose, {
