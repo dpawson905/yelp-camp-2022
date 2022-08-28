@@ -17,6 +17,9 @@ const UserSchema = new Schema({
     default: undefined,
     expires: "24h",
   },
+  googleId: String,
+  google_token: String,
+  username: String
 });
 
 UserSchema.plugin(passportLocalMongoose, {

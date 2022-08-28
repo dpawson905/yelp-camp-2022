@@ -1,19 +1,20 @@
-const GoogleUser = require('../models/googleUser');
+const GoogleUser = require('../models/user');
 
 exports.authUser = async (req, accessToken, refreshToken, profile, done) => {
   try {
     if (!req.user) {
       const googleUser = await GoogleUser.findOne({ gogleId: profile.id });
       if (googleUser) {
+        console.log(googleUser)
         return done(null, googleUser);
       }
       const newGoogleUser = new GoogleUser({
         googleId: profile.id,
-        token: accessToken,
+        google_token: accessToken,
         email: profile.email,
-        firstName: profile.given_name,
-        lastName: profile.family_name,
-        picture: profile.picture
+        username: profile.email.split('@')[0],
+        isVerified: true,
+        expires: undefined
       });
       await newGoogleUser.save();
       return done(null, newGoogleUser);
